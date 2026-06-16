@@ -520,19 +520,31 @@ def summarize_text(text, compression_percentage):
                 sentence_entities[idx]
             )
         )
+        # KEYWORD BONUS
 
-        # POSITION BONUS
+        keyword_score = 0
 
-        position_score = (
+        sentence_lower = sentences[idx].lower()
 
-            (
-                total_sentences
-                - idx
-            )
+        for keyword, weight in important_keywords.items():
 
-            /
-            total_sentences
-        )
+            if keyword in sentence_lower:
+
+                keyword_score += weight
+
+        # POSITION WEIGHTING
+
+        position_weight = 1.0
+
+        # Beginning sentences
+        if idx < total_sentences * 0.15:
+            position_weight = 1.3
+
+        # Ending sentences
+        elif idx > total_sentences * 0.80:
+            position_weight = 1.4
+
+        position_score = position_weight
 
         # HYBRID FORMULA
 
