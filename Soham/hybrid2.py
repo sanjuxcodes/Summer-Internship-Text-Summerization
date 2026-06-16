@@ -550,29 +550,34 @@ def summarize_text(text, compression_percentage):
 
         score = (
 
-            0.5
+            0.40
             *
             textrank_score
 
             +
 
-            0.3
+            0.25
             *
             tfidf_score
 
             +
 
-            0.1
+            0.15
             *
             ner_score
 
             +
 
-            0.1
+            0.10
             *
             position_score
-        )
 
+            +
+
+            0.10
+            *
+            keyword_score
+        )
         # LENGTH NORMALIZATION
 
         if len(words) > 0:
