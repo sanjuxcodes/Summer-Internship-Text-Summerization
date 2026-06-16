@@ -448,29 +448,15 @@ def summarize_text(text, compression_percentage):
     # EVENT / CUE PHRASE WEIGHTING
     # ------------------------------------------------------
 
-    important_keywords = {
-        "missing": 1.0,
-        "lost": 1.0,
-        "remembered": 0.8,
-        "searched": 0.7,
-        "search": 0.7,
-        "decided": 0.6,
-        "explained": 0.6,
-        "found": 1.2,
-        "identify": 1.0,
-        "identified": 1.0,
-        "recognized": 1.0,
-        "returned": 1.2,
-        "brought": 1.0,
-        "safe": 0.8,
-        "however": 0.8,
-        "because": 0.8,
-        "therefore": 0.8,
-        "lesson": 1.2,
-        "learned": 1.2,
-        "advised": 0.7,
-        "wallet": 0.8
-    }
+    tfidf = {}
+
+    for word in word_freq:
+
+        tfidf[word] = (
+            tf[word]
+            *
+            idf[word]
+        )
 
     # ------------------------------------------------------
     # HYBRID SENTENCE SCORING
