@@ -637,9 +637,46 @@ def summarize_text(text, compression_percentage):
         reverse=True
     )
 
-    selected = ranked_sentences[
-        :summary_size
-    ]
+    # ------------------------------------------------------
+    # MMR REDUNDANCY REMOVAL
+    # ------------------------------------------------------
+
+    selected = []
+
+    selected_indices = []
+
+    for idx, score in ranked_sentences:
+
+        redundant = False
+
+        current_vector = sentence_vectors[idx]
+
+        for prev_idx in selected_indices:
+
+            sim = cosine_similarity(
+                current_vector,
+                sentence_vectors[prev_idx]
+            )[0][0]
+
+            if sim > 0.75:
+
+                redundant = True
+
+                break
+
+        if not redundant:
+
+            selected.append(
+                (idx, score)
+            )
+
+            selected_indices.append(
+                idx
+            )
+
+        if len(selected) >= summary_size:
+
+            break
 
     selected = sorted(
         selected,
