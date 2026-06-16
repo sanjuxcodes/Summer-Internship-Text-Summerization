@@ -208,6 +208,26 @@ def summarize_text(text, compression_percentage):
         )
 
     # ------------------------------------------------------
+    # AUTOMATIC TOP TF-IDF KEYWORDS
+    # ------------------------------------------------------
+
+    top_keywords = set(
+
+        word
+
+        for word, score
+
+        in sorted(
+            tfidf.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:20]
+    )
+
+    print("\nTOP TF-IDF KEYWORDS")
+    print(top_keywords)
+
+    # ------------------------------------------------------
     # DISPLAY TF-IDF VALUES
     # ------------------------------------------------------
 
