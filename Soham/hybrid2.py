@@ -562,7 +562,7 @@ def summarize_text(text, compression_percentage):
 
             +
 
-            0.05 * event_score
+            0.03 * event_score
         )
         # LENGTH NORMALIZATION
 
