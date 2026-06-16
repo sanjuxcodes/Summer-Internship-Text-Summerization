@@ -517,13 +517,11 @@ def summarize_text(text, compression_percentage):
 
         keyword_score = 0
 
-        sentence_lower = sentences[idx].lower()
+        for word in words:
 
-        for keyword, weight in important_keywords.items():
+            if word in top_keywords:
 
-            if keyword in sentence_lower:
-
-                keyword_score += weight
+                keyword_score += 1
 
         # POSITION WEIGHTING
 
