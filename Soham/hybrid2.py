@@ -513,7 +513,19 @@ def summarize_text(text, compression_percentage):
                 sentence_entities[idx]
             )
         )
+        # EVENT SCORE
 
+        event_score = 0
+
+        tagged_sentence = nltk.pos_tag(
+            word_tokenize(sentences[idx])
+        )
+
+        for word, tag in tagged_sentence:
+
+            if tag.startswith("VB"):
+
+                event_score += 1
 
         # POSITION WEIGHTING
 
@@ -533,28 +545,23 @@ def summarize_text(text, compression_percentage):
 
         score = (
 
-            0.40
-            *
-            textrank_score
+            0.45 * textrank_score
 
             +
 
-            0.25
-            *
-            tfidf_score
+            0.25 * tfidf_score
 
             +
 
-            0.15
-            *
-            ner_score
+            0.10 * ner_score
 
             +
 
-            0.10
-            *
-            position_score
+            0.10 * position_score
 
+            +
+
+            0.10 * event_score
         )
         # LENGTH NORMALIZATION
 
