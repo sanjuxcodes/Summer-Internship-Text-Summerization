@@ -620,24 +620,63 @@ def summarize_text(text, compression_percentage):
 # MAIN
 # ==========================================================
 
-with open(
-    "document.txt",
-    "r",
-    encoding="utf-8"
-) as file:
+# ==========================================================
+# INPUT FILE NAME
+# ==========================================================
 
-    text = file.read()
+while True:
+
+    file_name = input(
+        "\nEnter text file name (e.g., doc1.txt): "
+    )
+
+    try:
+
+        with open(
+            file_name,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            text = file.read()
+
+        break
+
+    except FileNotFoundError:
+
+        print(
+            f"\nError: '{file_name}' not found."
+        )
+
+        print(
+            "Please enter a valid file name."
+        )
+
+
+# ==========================================================
+# COMPRESSION INPUT
+# ==========================================================
 
 compression_percentage = float(
     input(
-        "Enter compression percentage (10-100): "
+        "\nEnter compression percentage (10-100): "
     )
 )
+
+
+# ==========================================================
+# GENERATE SUMMARY
+# ==========================================================
 
 summary = summarize_text(
     text,
     compression_percentage
 )
+
+
+# ==========================================================
+# DISPLAY SUMMARY
+# ==========================================================
 
 print("\n")
 print("=" * 70)
