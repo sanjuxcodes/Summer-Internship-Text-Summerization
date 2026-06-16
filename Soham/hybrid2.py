@@ -546,7 +546,7 @@ def summarize_text(text, compression_percentage):
 
         score = (
 
-            0.45 * textrank_score
+            0.55 * textrank_score
 
             +
 
@@ -562,7 +562,7 @@ def summarize_text(text, compression_percentage):
 
             +
 
-            0.10 * event_score
+            0.05 * event_score
         )
         # LENGTH NORMALIZATION
 
