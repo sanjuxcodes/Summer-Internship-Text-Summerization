@@ -2,6 +2,8 @@ import nltk
 import math
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from collections import Counter
 
@@ -34,7 +36,7 @@ stop_words = set(stopwords.words('english'))
 
 
 # ==========================================================
-# NER EXTRACTION
+# NER FUNCTION
 # ==========================================================
 
 def extract_named_entities(words):
@@ -60,7 +62,7 @@ def extract_named_entities(words):
 
 
 # ==========================================================
-# SUMMARIZATION FUNCTION
+# MAIN SUMMARIZATION FUNCTION
 # ==========================================================
 
 def summarize_text(text, compression_percentage):
@@ -140,7 +142,7 @@ def summarize_text(text, compression_percentage):
         )
 
     # ------------------------------------------------------
-    # TF-IDF WORD WEIGHTS
+    # TF CALCULATION
     # ------------------------------------------------------
 
     total_words = len(all_words)
@@ -158,6 +160,10 @@ def summarize_text(text, compression_percentage):
             total_words
         )
 
+    # ------------------------------------------------------
+    # IDF CALCULATION
+    # ------------------------------------------------------
+
     N = len(
         processed_sentences
     )
@@ -167,19 +173,29 @@ def summarize_text(text, compression_percentage):
     for word in word_freq:
 
         doc_freq = sum(
+
             1
+
             for sentence
+
             in processed_sentences
+
             if word in sentence
         )
 
         idf[word] = (
+
             math.log(
-                (N + 1) /
+                (N + 1)
+                /
                 (doc_freq + 1)
             )
             + 1
         )
+
+    # ------------------------------------------------------
+    # TF-IDF CALCULATION
+    # ------------------------------------------------------
 
     tfidf = {}
 
@@ -187,7 +203,8 @@ def summarize_text(text, compression_percentage):
 
         tfidf[word] = (
             tf[word]
-            * idf[word]
+            *
+            idf[word]
         )
 
     # ------------------------------------------------------
@@ -205,12 +222,12 @@ def summarize_text(text, compression_percentage):
     ):
 
         print(
-            f"{word:<25} "
+            f"{word:<25}"
             f"{value:.6f}"
         )
 
     # ------------------------------------------------------
-    # TEXT RANK
+    # SENTENCE VECTORIZATION
     # ------------------------------------------------------
 
     processed_texts = [
@@ -218,6 +235,7 @@ def summarize_text(text, compression_percentage):
         " ".join(words)
 
         for words
+
         in processed_sentences
     ]
 
@@ -229,10 +247,12 @@ def summarize_text(text, compression_percentage):
         )
     )
 
-    similarity_matrix = (
-        cosine_similarity(
-            sentence_vectors
-        )
+    # ------------------------------------------------------
+    # SIMILARITY MATRIX
+    # ------------------------------------------------------
+
+    similarity_matrix = cosine_similarity(
+        sentence_vectors
     )
 
     np.fill_diagonal(
@@ -240,20 +260,195 @@ def summarize_text(text, compression_percentage):
         0
     )
 
+    print("\n" + "=" * 70)
+    print("SENTENCE SIMILARITY MATRIX")
+    print("=" * 70)
+
+    matrix_df = pd.DataFrame(
+        similarity_matrix,
+        index=[
+            f"S{i+1}"
+            for i
+            in range(
+                len(sentences)
+            )
+        ],
+        columns=[
+            f"S{i+1}"
+            for i
+            in range(
+                len(sentences)
+            )
+        ]
+    )
+
+    print(
+        matrix_df.round(3)
+    )
+
+    # ------------------------------------------------------
+    # HEATMAP
+    # ------------------------------------------------------
+
+    plt.figure(
+        figsize=(8, 6)
+    )
+
+    plt.imshow(
+        similarity_matrix,
+        cmap='Blues'
+    )
+
+    plt.colorbar()
+
+    plt.xticks(
+        range(len(sentences)),
+        [
+            f"S{i+1}"
+            for i
+            in range(
+                len(sentences)
+            )
+        ]
+    )
+
+    plt.yticks(
+        range(len(sentences)),
+        [
+            f"S{i+1}"
+            for i
+            in range(
+                len(sentences)
+            )
+        ]
+    )
+
+    plt.title(
+        "Sentence Similarity Matrix"
+    )
+
+    plt.tight_layout()
+
+    plt.show()
+
+    # ------------------------------------------------------
+    # GRAPH CREATION
+    # ------------------------------------------------------
+
     graph = nx.from_numpy_array(
         similarity_matrix
     )
+
+    print("\n" + "=" * 70)
+    print("TEXT RANK GRAPH")
+    print("=" * 70)
+
+    print(
+        f"Nodes : {graph.number_of_nodes()}"
+    )
+
+    print(
+        f"Edges : {graph.number_of_edges()}"
+    )
+
+    # ------------------------------------------------------
+    # GRAPH VISUALIZATION
+    # ------------------------------------------------------
+
+    plt.figure(
+        figsize=(10, 8)
+    )
+
+    pos = nx.spring_layout(
+        graph,
+        seed=42
+    )
+
+    labels = {
+
+        i: f"S{i+1}"
+
+        for i
+
+        in range(
+            len(sentences)
+        )
+    }
+
+    nx.draw_networkx_nodes(
+        graph,
+        pos,
+        node_size=2500
+    )
+
+    nx.draw_networkx_labels(
+        graph,
+        pos,
+        labels,
+        font_size=10
+    )
+
+    nx.draw_networkx_edges(
+        graph,
+        pos
+    )
+
+    edge_labels = {
+
+        (u, v):
+        f"{d['weight']:.2f}"
+
+        for u, v, d
+
+        in graph.edges(data=True)
+    }
+
+    nx.draw_networkx_edge_labels(
+        graph,
+        pos,
+        edge_labels=edge_labels,
+        font_size=7
+    )
+
+    plt.title(
+        "TextRank Sentence Graph"
+    )
+
+    plt.axis(
+        "off"
+    )
+
+    plt.show()
+
+    # ------------------------------------------------------
+    # TEXTRANK
+    # ------------------------------------------------------
 
     textrank_scores = nx.pagerank(
         graph
     )
 
+    print("\n" + "=" * 70)
+    print("TEXT RANK SCORES")
+    print("=" * 70)
+
+    for idx, score in sorted(
+        textrank_scores.items(),
+        key=lambda x: x[1],
+        reverse=True
+    ):
+
+        print(
+            f"Sentence {idx+1} : "
+            f"{score:.6f}"
+        )
+
     # ------------------------------------------------------
-    # SENTENCE SCORING
+    # HYBRID SENTENCE SCORING
     # ------------------------------------------------------
 
     print("\n" + "=" * 70)
-    print("SENTENCE SCORES")
+    print("HYBRID SENTENCE SCORES")
     print("=" * 70)
 
     sentence_scores = []
@@ -266,69 +461,87 @@ def summarize_text(text, compression_percentage):
         processed_sentences
     ):
 
-        # TF-IDF Sentence Score
+        # TF-IDF SCORE
 
         tfidf_score = sum(
-            tfidf.get(word, 0)
-            for word in words
+
+            tfidf.get(
+                word,
+                0
+            )
+
+            for word
+
+            in words
         )
 
-        # TextRank Score
+        # TEXTRANK SCORE
 
         textrank_score = (
             textrank_scores[idx]
         )
 
-        # NER Bonus
+        # NER BONUS
 
         ner_score = (
-            0.5 *
+
+            0.5
+            *
             len(
                 sentence_entities[idx]
             )
         )
 
-        # Position Bonus
+        # POSITION BONUS
 
         position_score = (
+
             (
                 total_sentences
                 - idx
             )
+
             /
             total_sentences
         )
 
-        # Hybrid Score
+        # HYBRID FORMULA
 
         score = (
 
-            0.5 *
+            0.5
+            *
             textrank_score
 
             +
 
-            0.3 *
+            0.3
+            *
             tfidf_score
 
             +
 
-            0.1 *
+            0.1
+            *
             ner_score
 
             +
 
-            0.1 *
+            0.1
+            *
             position_score
         )
 
-        # Length Normalization
+        # LENGTH NORMALIZATION
 
         if len(words) > 0:
 
             score = (
+
                 score
+
                 /
+
                 math.sqrt(
                     len(words)
                 )
@@ -342,8 +555,8 @@ def summarize_text(text, compression_percentage):
         )
 
         print(
-            f"Sentence {idx+1:<3} : "
-            f"{score:.6f}"
+            f"Sentence {idx+1:<3}"
+            f" : {score:.6f}"
         )
 
     # ------------------------------------------------------
@@ -352,14 +565,16 @@ def summarize_text(text, compression_percentage):
 
     compression_rate = (
         compression_percentage
-        / 100
+        /
+        100
     )
 
     summary_size = max(
         1,
         round(
             len(sentences)
-            * compression_rate
+            *
+            compression_rate
         )
     )
 
@@ -386,7 +601,7 @@ def summarize_text(text, compression_percentage):
     )
 
     # ------------------------------------------------------
-    # GENERATE SUMMARY
+    # SUMMARY GENERATION
     # ------------------------------------------------------
 
     summary = " ".join(
@@ -402,11 +617,11 @@ def summarize_text(text, compression_percentage):
 
 
 # ==========================================================
-# MAIN PROGRAM
+# MAIN
 # ==========================================================
 
 with open(
-    "doc1.txt",
+    "document.txt",
     "r",
     encoding="utf-8"
 ) as file:
@@ -414,7 +629,6 @@ with open(
     text = file.read()
 
 compression_percentage = float(
-
     input(
         "Enter compression percentage (10-100): "
     )
