@@ -444,19 +444,6 @@ def summarize_text(text, compression_percentage):
         )
 
 
-    # ------------------------------------------------------
-    # EVENT / CUE PHRASE WEIGHTING
-    # ------------------------------------------------------
-
-    tfidf = {}
-
-    for word in word_freq:
-
-        tfidf[word] = (
-            tf[word]
-            *
-            idf[word]
-        )
 
     # ------------------------------------------------------
     # HYBRID SENTENCE SCORING
