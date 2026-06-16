@@ -531,14 +531,14 @@ def summarize_text(text, compression_percentage):
 
         position_weight = 1.0
 
-    if idx == 0:
-        position_weight = 1.5
+        if idx == 0:
+            position_weight = 1.5
 
-    elif idx < total_sentences * 0.15:
-        position_weight = 1.3
+        elif idx < total_sentences * 0.15:
+            position_weight = 1.3
 
-    elif idx > total_sentences * 0.80:
-        position_weight = 1.5
+        elif idx > total_sentences * 0.80:
+            position_weight = 1.5
 
         position_score = position_weight
 
