@@ -513,15 +513,7 @@ def summarize_text(text, compression_percentage):
                 sentence_entities[idx]
             )
         )
-        # KEYWORD BONUS
 
-        keyword_score = 0
-
-        for word in words:
-
-            if word in top_keywords:
-
-                keyword_score += 1
 
         # POSITION WEIGHTING
 
@@ -563,11 +555,6 @@ def summarize_text(text, compression_percentage):
             *
             position_score
 
-            +
-
-            0.10
-            *
-            keyword_score
         )
         # LENGTH NORMALIZATION
 
