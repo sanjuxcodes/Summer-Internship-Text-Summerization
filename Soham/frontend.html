@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>Text Summarizer</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; }
+        body { background: #efe6ab; background-image: radial-gradient(#ff5d93 2px, transparent 2px); background-size: 42px 42px; padding: 30px; }
+        .title { text-align: center; font-size: 48px; font-weight: 900; margin: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .panel { background: #f3f3ef; border: 5px solid #000; border-radius: 18px; box-shadow: 10px 10px #000; padding: 0; overflow: hidden; }
+        .head { font-size: 28px; font-weight: 900; padding: 16px 20px; border-bottom: 5px solid #000; }
+        .panel:nth-child(1) .head { background: #f4d33f; }
+        .panel:nth-child(2) .head { background: #63d0d8; }
+        .body { padding: 18px; }
+        textarea { width: 100%; height: 320px; border: 4px solid #000; border-radius: 12px; padding: 14px; font-size: 16px; resize: none; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+        .card { border: 3px solid #000; border-radius: 10px; padding: 10px; text-align: center; font-weight: 700; box-shadow: 4px 4px #000; }
+        .card:nth-child(1) { background: #69db7c; }
+        .card:nth-child(2) { background: #f7a84c; }
+        .card:nth-child(3) { background: #8bb9df; }
+        .card span { font-size: 26px; font-weight: 900; display: block; margin-top: 2px; }
+        
+        /* Compression Control Slider */
+        .config-container { max-width: 500px; margin: 20px auto; background: #fff; border: 4px solid #000; border-radius: 12px; box-shadow: 6px 6px #000; padding: 15px 20px; text-align: center; font-weight: bold; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 8px; }
+        .slider { width: 100%; accent-color: #ff6b8b; cursor: pointer; }
+        
+        .actions { text-align: center; margin-top: 25px; }
+        button { padding: 14px 28px; border: 4px solid #000; background: #ff6b8b; font-weight: 900; border-radius: 10px; box-shadow: 5px 5px #000; margin: 0 8px; cursor: pointer; font-size: 18px; transition: transform 0.1s; }
+        button:active { transform: translate(3px, 3px); box-shadow: 2px 2px #000; }
+        button:last-child { background: #fff; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        @media(max-width:900px) { .grid { grid-template-columns: 1fr; } .title { font-size: 36px; } }
+    </style>
+</head>
+<body>
+    <div class='title'>📝 Text Summarizer</div>
+    
+    <div class="config-container">
+        <div class="slider-label">
+            <span>Compression to REMOVE:</span>
+            <span id="pct-val">50%</span>
+        </div>
+        <input type="range" id="compression" class="slider" min="10" max="90" value="50">
+    </div>
+
+    <div class='grid'>
+        <div class='panel'>
+            <div class='head'>📄 Original Text</div>
+            <div class='body'>
+                <textarea id='original' placeholder='Paste long text here...'></textarea>
+                <div class='stats'>
+                    <div class='card'>Words<span id='ow'>0</span></div>
+                    <div class='card'>Characters<span id='oc'>0</span></div>
+                    <div class='card'>Sentences<span id='os'>0</span></div>
+                </div>
+            </div>
+        </div>
+        <div class='panel'>
+            <div class='head'>✨ Summarized Text</div>
+            <div class='body'>
+                <textarea id='summary' readonly placeholder='Summary will appear here...'></textarea>
+                <div class='stats'>
+                    <div class='card'>Words<span id='sw'>0</span></div>
+                    <div class='card'>Characters<span id='sc'>0</span></div>
+                    <div class='card'>Sentences<span id='ss'>0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class='actions'>
+        <button id="submit-btn">⚡ Summarize</button>
+        <button id='clear'>🗑 Clear</button>
+    </div>
+
+    <script>
+        const original = document.getElementById('original');
+        const summary = document.getElementById('summary');
+        const compressionSlider = document.getElementById('compression');
+        const pctVal = document.getElementById('pct-val');
+        const submitBtn = document.getElementById('submit-btn');
+        const clearBtn = document.getElementById('clear');
+
+        function count(textareaId, wId, cId, sId) {
+            let t = document.getElementById(textareaId).value;
+            document.getElementById(wId).textContent = t.trim() ? t.trim().split(/\s+/).length : 0;
+            document.getElementById(cId).textContent = t.length;
+            let m = t.match(/[^.!?]+[.!?]+/g);
+            document.getElementById(sId).textContent = m ? m.length : (t.trim() ? 1 : 0);
+        }
+
+        original.addEventListener('input', () => count('original', 'ow', 'oc', 'os'));
+        compressionSlider.addEventListener('input', () => pctVal.textContent = compressionSlider.value + '%');
+
+        clearBtn.onclick = () => {
+            original.value = '';
+            summary.value = '';
+            count('original', 'ow', 'oc', 'os');
+            count('summary', 'sw', 'sc', 'ss');
+        };
+
+        submitBtn.onclick = async () => {
+            const textToProcess = original.value.strip ? original.value.strip() : original.value;
+            if (!textToProcess) return alert("Please enter some text to summarize!");
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "⏳ Processing...";
+
+            try {
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: original.value,
+                        compression: parseInt(compressionSlider.value)
+                    })
+                });
+                
+                const data = await response.json();
+                summary.value = data.summary;
+                count('summary', 'sw', 'sc', 'ss');
+            } catch (error) {
+                console.error("Error connecting to Python service:", error);
+                alert("Could not connect to the summarization backend.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "⚡ Summarize";
+            }
+        };
+    </script>
+</body>
+</html>
